@@ -1,0 +1,11 @@
+# Buscar tudo da tabela autor
+select * from autor;
+
+# Buscar tudo da tabela livro
+select * from livro;
+
+# Consultar campos específicos do relacionamento entre as tabelas autor e livro
+select l.id, l.titulo as nome_livro, a.nome as nome_autor
+from livro l
+join autor a
+on a.id = l.id_autor;

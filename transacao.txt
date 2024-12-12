@@ -1,0 +1,36 @@
+# Transação
+
+# O que seria?
+- Seria você abrir uma janela que você vai executar algumas operações e no final você vai fechar aquela janela com
+sucesso ou com erro.
+- Então, é basicamente uma tarefa que eu vou executar que pode ter um ou mais scripts e eu vou confirmar essas
+alterações que eu vou fazer no banco ou vou desfazer tudo caso dê algum erro.
+
+# Estado das entidades
+- Basicamente quando você cria uma nova entidade, não cadastrei ainda no banco, não fiz nada, ela é uma Transient, ou
+seja, ela não tem id ainda, ela não foi salva no banco, não foi persistida, então você tem uma entidade que é nova.
+- Quando eu chamar o método persist/save ela vai para o estado Managed que é o estado gerenciado, quando ela está nesse
+estado quer dizer que está associado a um Entity Manager, como já vimos o Entity Manager é o objeto que tem a conexão
+com o banco de dados e realiza as operações das entidades nas tabelas, e quando ela está nesse estado gerenciado todas
+as operações que eu fizer nessas entidades, todas as operações que eu executar dentro de uma transação, serão
+persistidas no banco ao final da transação, se der sucesso.
+- A operação flush/commit é uma operação em que o Entity Manager faz, é como se fosse dar descarga, é como se eu pegasse
+tudo o que está ali dependente, todas as operações que eu abri ali dentro da transação e eu quero mandar para o banco
+direto ou então caso eu faça um commit, ou seja, ele termine aquela transação, ele faz o commit e vai tudo para o banco
+de dados.
+- Estando no estado Managed quais outros estados que eu tenho? Eu tenho Removed, ou seja, se eu chamar o remove do meu
+Entity Manager ou delete do meu JPA Repository ela vai para esse estado Removed, então vai ser removido, foi marcada pra
+ser removido do banco de dados e com flush/commit vai persistir essa deleção no banco de dados, mas se dentro da
+transação, depois de deletar, eu chamar um persist/save para essa entidade novamente o que vai acontecer? Ela vai voltar
+para o estado Managed.
+- Também posso fazer um detach/clear no Entity Manager, ou seja, digo assim Entity Manager dê um detach nessa entidade,
+o que ele vai fazer? Vai disassociar aquela entidade do Entity Manager e quando eu fizer um commit/flush ele vai excluir
+aquela entidade das operações, isso aqui é uma operação que não é muito realizada.
+- Quando é que ela está no estado Detached, por exemplo vamos supor que eu consultei uma entidade no banco de dados find
+e ela vai para o estado Managed, se eu trouxe do banco, ela acabou de vir do banco e está com estado Managed, então eu
+trouxe os dados do banco de dados, apresentei no formulário, e depois eu fiz uma alteração em outro método, já tinha
+encerrado aquela transação, então vou fazer uma atualização daquele registro em outro método, aquela operação já tinha
+sido executada, já fiz o find e só depois estou fazendo um update, quando isso acontece eu chamo essas entidades de
+Detached e daí quando chamo novamente o método merge do Entity Manager ele vai colocar novamente essa entidade no estado
+Managed, ou seja, qualquer operação que teve nessa entidade, se atualizei algum dado dessa entidade, no final da
+transação ele vai mandar para o banco o update.

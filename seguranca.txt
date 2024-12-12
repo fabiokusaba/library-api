@@ -1,0 +1,69 @@
+# Spring Security
+
+## Conceitos básicos sobre segurança de API's
+- Autenticação: imagine que tem uma pessoa querendo acessar o prédio, seja ele um funcionário ou visitante, então ele
+precisa de identificar pois não é qualquer pessoa que vai poder acessar o prédio. Quando ele chegar na portaria vai ter
+um segurança/guarda que vai pedir algum documento para sua identificação, e a autenticação nada mais é do que isso se
+autenticar significa garantir que aquele é você mesmo, quem é você, identificação de quem é aquela pessoa. A pessoa vai
+se identificar no salão da recepção junto com o segurança e vai ser emitido um crachá de visitante ou então o seu crachá
+de funcionário para que você tenha acesso ao prédio.
+- Vindo para dentro de um sistema eu sou um usuário e a primeira coisa que tenho ali é a página de login onde vou dizer
+o meu usuário e senha, será que isso é suficiente pra dizer que esse usuário é quem ele diz ser? Então, quando se trata
+de sistemas é mais complicado porque você não está vendo a pessoa olho a olho, você não está vendo o documento da pessoa
+pra ver se é ela mesma como no exemplo anterior do guarda/segurança, mas a gente tem alguns mecanismos aqui que vão
+auxiliar na identificação dessa pessoa graças aos avanços tecnológicos, por exemplo o usuário vai colocar o seu login e
+senha, geralmente somente a própria pessoa sabe a senha a não ser que ela passe para um terceiro, e ali nós temos alguns
+sistemas que emitem um token de autenticação, enviam uma mensagem para o celular da pessoa, ou seja, aquela pessoa
+anteriormente já fez o cadastro de um número de telefone onde ela mesma é titular daquele número então é ela quem tem
+acesso aquele telefone e só ela quem vai receber aquela mensagem, então mesmo que alguém roube a senha dela ela não vai
+conseguir se autenticar, aquela pessoa quem roubou a senha, porque ela não vai receber o SMS então só quem recebeu o SMS
+ou gerou um código do token de um autenticador é quem vai conseguir acessar.
+- Autorização: digamos que eu já te identifiquei, já sei quem é você, mas agora eu vou te dar ali autorizações pra você
+fazer operações como no exemplo, se você for um vendedor você pode realizar uma venda ou cadastrar um cliente, então o
+conceito de autorização é o que você pode ou não fazer.
+- Usuário: quem acessa a aplicação.
+- Role: qual é o papel que aquela pessoa exerce, qual é o grupo dela.
+- Authority: permissões inerentes ao grupo, são as transações que aquela pessoa pode executar.
+
+## Autenticação HTTP Basic
+- Nada mais é do que o header Authorization onde você coloca a palavra Basic dá um espaço e você coloca o usuário e a
+senha transformados em Base64.
+- Como vimos o browser dá suporte para autenticação Basic, mas o mais comum é quando você vai utilizar de aplicação para
+aplicação como é o caso do Postman.
+- Não é uma autenticação muito segura porque qualquer pessoa pode vir aqui, sabendo que é um Base64, faz a decodificação
+e descobre o usuário e a senha, por isso é necessário utilizar de outras estratégias de segurança caso você venha a
+utilizar a autenticação Basic.
+
+## Customizando formulário de login
+- Para isso precisamos adicionar um novo starter no nosso pom.xml que é o thymeleaf.
+- O thymeleaf é uma biblioteca para fazer páginas web em aplicações Spring, então com essa biblioteca eu consigo criar
+páginas web aqui dentro da minha aplicação e fazer ela se comunicar ali com a API.
+- Em resources vamos criar uma pasta chamada templates e aqui dentro vou criar as páginas web.
+- Quando a gente tem um formulário de login ele guarda o cookie no browser para dizer que aquilo ali é a sua sessão.
+
+## Autenticação de Usuários
+- Authentication é uma das interfaces que o Spring Security disponibiliza pra gente poder customizar os nossos usuários.
+- UserDetails é uma interface de detalhes de usuário, interface simples que é pra você dizer qual é o login, qual é a
+senha e quais são as permissões daquele usuário, ou seja, ou as roles ou as authorities daquele usuário.
+- UserDetailsService nada mais é do que uma interface que provê um metodo pra gente, ou seja, ele disponibiliza um
+metodo pra gente implementar e esse metodo ele é um metodo loadUserByUsername, ou seja, carregue o usuário pelo login e
+esse metodo simplesmente pega o login de um usuário, login digitado, e retorna um UserDetails, é aqui que a gente vai
+implementar de onde a gente vai buscar esse usuário. O UserDetailsService é bem extensível, ou seja, você pode utilizar
+você pode implementar de qualquer forma, em memória UserDetailsServiceInMemory, mas você também pode utilizar um
+repository para acessar um banco de dados UsuarioRepository.
+- Então, com esse objeto UserDetails, se ele estiver autenticado corretamente, o Spring Security vai produzir um objeto
+do tipo Authentication, é o objetivo, ela será adicionada dentro do contexto do Spring Security, tudo isso ocorre dentro
+do filtro SecurityFilterChain e vai acontecer antes de chegar na API.
+- Adicionado a Authentication dentro do contexto do Spring Security onde agora a aplicação já conhece essa
+Authentication, a gente sabe de quem são essas credenciais, ela vai liberar o acesso e você vai conseguir acessar a API,
+mas também tem que levar em consideração que ele vai liberar alguns endpoints que vai depender do seu acesso se você
+tiver acesso pra aquele endpoint você vai ser liberado pra acessar ele, caso não seja você recebeu um Unauthorize, mas
+de qualquer forma você vai estar autenticado e aí alguma permissão você vai ter de fazer na API.
+
+## Roles e authorities
+- Dentro do Rest o 401 quer dizer que não estou autenticado, a URL que estou acessando exige que esteja autenticado mas
+eu não estou autenticado. Já o Forbidden 403 é proibido, ou seja, não tenho permissão para fazer essa requisição, quer
+dizer que estou autenticado mas eu não tenho permissão.
+- A diferença entre Authority e Role é justamente essa: a Role é um grupo de usuário, é um papel que você exerce, e a
+Authority é uma permissão de executar uma tarefa, uma operação.
+- Então, a gente pode dizer que o grupo de usuário carrega várias authorities.

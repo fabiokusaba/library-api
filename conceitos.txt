@@ -1,0 +1,159 @@
+# Conceitos e Modelagem de API's RestFUL
+
+# Protocolo HTTP
+- Protocolo de transferência de hipertexto.
+- Basicamente as suas características principais são:
+    * Baseado em texto, então todas as mensagens que são utilizadas na comunicação são texto.
+    * Sem estado, então ele não mantém estado, por exemplo se você fizer uma requisição você não vai ter ali no servidor
+    você não tem como conseguir ali o histórico de requisições, não fica salvo as requisições que você faz a menos que
+    você implemente alguma coisa no seu servidor para poder salvar no banco de dados, mas aí já não é do HTTP foi você
+    mesmo quem implementou, cada requisição é única, por ser sem estado todos os elementos que você manda para que
+    aquela requisição aconteça você mande em toda a requisição inclusive credenciais de autenticação.
+    * Cliente-Servidor, funciona no modelo cliente-servidor então nós temos um servidor HTTP que recebe as requisições e
+    nós temos os clientes que são aqueles que vão consumir, que vão se comunicar com o servidor através do protocolo
+    HTTP.
+    * Modelo Request-Response, nada mais é do que o cliente manda uma requisição para o servidor, o servidor recebe essa
+    requisição, processa e manda uma resposta, então toda vez que você manda uma requisição você vai ter uma resposta
+    seja de sucesso, seja de erro.
+    * HTTPS (HTTP Secure), basicamente ele é um HTTP de forma segura, ou seja, os dados que você está mandando são
+    criptografados.
+
+# Rest
+- São princípios para projetar serviços em rede distribuídos.
+- Interface para uma comunicação padronizada.
+- RESTful? Basicamente é a característica de um sistema que utiliza corretamente os conceitos Rest para definir a sua
+API, a sua aplicação, então o Rest tem umas regras que você tem que seguir como: códigos de status corretos que você
+deve retornar de acordo com o tipo de requisição, o verbo HTTP adequado, identificação de recursos apropriada, o sistema
+RESTful é aquele que utiliza o Rest em sua forma fidedigna.
+
+# Requests (Requisições)
+- O cliente que vai executar a requisição, o servidor vai ficar escutando e o cliente vai fazer a requisição utilizando
+o protocolo HTTP.
+
+# Estrutura de uma Request
+- URL
+- Cabeçalho (Header): envio de metadados da requisição.
+- Corpo (Body - Opcional)
+- Método ou verbo HTTP: indica a ação a ser executada no servidor.
+
+# Composição Requests
+## Headers
+* Accept -> quando você quer negociar o tipo de conteúdo que você quer receber.
+* Content-Type -> é o tipo de conteúdo que você está enviando.
+* Authorization -> serve pra gente mandar informações de segurança, de identificação, de autorização.
+* Host -> origem de onde está partindo a requisição.
+* User-Agent -> diz pra gente qual foi o tipo de cliente que mandou a requisição, por exemplo Firefox, Google Chrome.
+
+## Body
+* JSON (application/json)
+* Texto (text/plain)
+* XML (application/xml)
+* HTML (text/html)
+* JPEG (image/jpg)
+* form-urlencoded -> dados de um formulário
+
+## Verbos HTTP
+* POST -> criar recursos, enviar dados, iniciar procedimentos, etc.
+* GET -> obter recursos.
+* PUT -> atualizar recursos.
+* DELETE -> excluir recursos.
+* PATCH -> atualização parcial.
+* HEAD -> verificação.
+* OPTIONS -> descrição de opções de comunicação.
+
+# Responses (Respostas)
+- O cliente manda uma requisição HTTP para o servidor e o servidor vai te dar uma resposta, vai processar a sua
+requisição e vai te dar uma resposta.
+
+# Estrutura de uma Response
+- Cabeçalho (Header)
+- Corpo (Body - Opcional)
+- Código de Status (Status Code)
+
+# Composição Responses
+## Headers
+* Content-Type
+* Content-Length -> tamanho do conteúdo em bytes.
+* Set-Cookie -> quando você vai inicializar uma sessão, por exemplo, você vai fazer um login num sistema, ele guarda
+um cookie no seu browser pra guardar a sessão do seu usuário.
+* Cache-Control -> controle de cache para não ter que carregar duas vezes o mesmo conteúdo.
+* Location -> serve para você especificar dentro de uma resposta uma localização de um outro recurso, de um recurso que
+você acabou de criar, por exemplo vamos imaginar que você cadastrou um cliente e a resposta veio com o Header Location
+indicando qual é a URL que você vai utilizar pra acessar os dados daquele cliente que você acabou de cadastrar.
+
+## Body
+* JSON (application/json)
+* Texto (text/plain)
+* XML (application/xml)
+* HTML (text/html)
+* JPEG (image/jpg)
+* form-urlencoded
+
+## Famílias de Códigos de Status
+* 100 - Informativos
+* 200 - Sucesso
+* 300 - Redirecionamentos
+* 400 - Erro de Client
+* 500 - Erro de Server
+
+## Códigos de Status para Aplicações
+* 200 - Ok -> sucesso genérico.
+* 201 - Created -> cadastrar ou criar um recurso novo no servidor, por exemplo cadastrar um cliente.
+* 202 - Accepted -> a requisição foi aceita e deu sucesso, por exemplo executar algum procedimento como importar dados
+do banco A para o banco B.
+* 204 - No Content -> sem conteúdo, deu sucesso mas não foi retornado nada, por exemplo deleção de algum registro.
+* 400 - Bad Request -> mais genérico indica que o cliente mandou alguma informação errada na requisição.
+* 401 - Unauthorized -> quando você tenta se autenticar mas o seu login/senha estão incorretos.
+* 403 - Forbidden -> quando você está autenticado mas você não tem acesso aquele recurso.
+* 404 - Not Found -> acessar um recurso que não existe no servidor, por exemplo você passou o id de um cliente que não
+existe no banco.
+* 405 - Method Not Allowed -> tenta cadastrar um cliente enviando um get, então o servidor espera que você mande um post
+para poder cadastrar o cliente e você manda um get, é um método não permitido para aquela operação.
+* 409 - Conflict -> pode ser utilizado quando você, por exemplo, vai cadastrar o mesmo cliente duas vezes.
+* 422 - Unprocessable Entity -> utilizado quando você vai validar, por exemplo, você mandou um cpf inválido ou então
+você mandou os dados do cliente faltando o nome, não consigo processar essa entidade, erro de validação.
+* 500 - Internal Server Error -> Erro de Server.
+
+# Modelagem de Contratos de API's
+
+## Contrato de API?
+- Um contrato de API é uma especificação que define todas as regras e diretrizes para a interação entre um cliente e uma
+API. Ele funciona como um acordo formal entre o provedor da API e os consumidores, garantindo que todos saibam
+exatamente como devem se comunicar.
+
+## Definindo um Contrato
+* Identificação do Recurso
+* Método/Verbo HTTP apropriado
+* Código de Resposta apropriado
+* Definição do Payload de Request e Response
+* Definição dos Headers
+
+## Identificação de Recursos
+- Basicamente como a gente vai identificar os recursos, ou seja, qual vai ser a URL utilizada para acessar aquele
+recurso.
+- A primeira diretriz que a gente tem é essa aqui: utilização de substantivos no plural no lugar de verbos, então o
+verbo da ação é o Método HTTP. Por exemplo: "/clientes"
+
+## Estrutura Hierárquica (subrecursos)
+- Dentro de uma API além dos recursos normais, por exemplo: "/clientes", mas eu posso ter subrecursos que seriam
+recursos que dependem de um recurso principal, por exemplo: "/pedidos/{id}/itens" em que estou acessando os itens do
+pedido, nesse exemplo o recurso principal é o pedido e o subrecurso os itens.
+
+## Identificadores Únicos
+- Utilizamos identificadores únicos para encontrar um recurso específico, por exemplo: "/pedidos/{id}".
+
+## Parâmetros de URL
+- Utilizar Query Params quando não for identificador de Recurso, por exemplo: "/clientes?nome=jose".
+
+## Método HTTP apropriado
+- Após ver as diretrizes para identificar o recurso agora precisamos definir qual o método HTTP apropriado, então o
+verbo da ação é o Método HTTP. Por exemplo: cadastrar cliente POST "/clientes".
+- Estrutura hierárquica (subrecursos) -> por exemplo: DELETE "/vendas/{id}/itens-pedido/{id}".
+
+## Código de Resposta apropriado
+- Quando você vai mandar uma resposta para o cliente você precisa mandar uma resposta adequada para que ele consiga
+entender o que aconteceu, então não faz sentido ele ter enviado os dados errados e eu ter dado um código de resposta 200
+dizendo que deu certo.
+- Então, o código de resposta apropriado representa na resposta o Status do que aconteceu para aquela requisição, por
+exemplo: cadastrar clientes POST "/clientes" código de sucesso seria o 201 created ou 200 ok, e alguns códigos de erro
+seriam 400 bad request, 409 conflito, 422 processo do entity para dizer que falta alguma coisa deu erro de validação.

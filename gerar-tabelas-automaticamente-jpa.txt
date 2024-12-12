@@ -1,0 +1,24 @@
+application.yml
+spring:
+    jpa:
+        show-sql: true
+        hibernate:
+            ddl-auto: update
+
+update -> cria o banco de dados e quando a gente derrubar a aplicação o banco vai continuar lá, então tanto ele cria o
+banco como ele atualiza, se você fizer alterações no mapeamento depois ele vai atualizar o banco, se você criar novos
+mapeamentos toda vez que você subir a aplicação ele vai persistir essas alterações lá no banco de dados.
+Não é recomendável utilizar em produção até mesmo porque algumas empresas não permitem, você pode não ter permissão de
+executar comandos DDL (Data Definition Language), ou seja, essas comandos de estrutura de banco que são DDLs alguns
+usuários não são permitidos pra executar, apenas os engenheiros de dados, DBAs, em algumas empresas você não tem acesso
+a base você precisa passar lá algum script para o DBA executar e a aplicação muitas vezes vai ter somente permissão de
+leitura e escrita, mas não tem de DDL, então é mais interessante você criar os scripts SQL e utilizar isso aqui só a
+nível de estudo para não precisar ficar criando os scripts SQL na mão.
+
+none -> padrão, não faz nada.
+
+create-drop -> ele vai fazer o seguinte na hora que você subir a aplicação ele vai gerar o banco, mas na hora que você
+derrubar ele vai dar um drop em tudo o que foi criado, isso aqui é interessante para usar em testes quando você for
+fazer testes de integração, ele gera o banco você faz os testes e depois ele elimina o banco.
+
+show-sql -> usado para vermos o SQL que ele vai gerar aqui no console.
