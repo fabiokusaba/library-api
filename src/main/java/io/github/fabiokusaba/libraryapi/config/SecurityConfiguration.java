@@ -55,11 +55,14 @@ public class SecurityConfiguration {
                 // Vou habilitar o formulário padrão do Spring Security
                 //.formLogin(Customizer.withDefaults())
                 // Customizando o formulário de login
-                .formLogin(configurer -> {
-                    // O permitAll vai fazer com que todos consigam acessar a página de login, ou seja, ela não vai
-                    // estar protegida com autenticação
-                    configurer.loginPage("/login");
-                })
+//                .formLogin(configurer -> {
+//                    // O permitAll vai fazer com que todos consigam acessar a página de login, ou seja, ela não vai
+//                    // estar protegida com autenticação
+//                    configurer.loginPage("/login");
+//                })
+                // Para demonstrar o login pelo Google vamos utilizar o default do formLogin porque ele vai adicionar
+                // automaticamente o botão para logarmos pelo Google
+                .formLogin(Customizer.withDefaults())
                 // Configurando o httpBasic
                 .httpBasic(Customizer.withDefaults())
                 // Por último vou autorizar requisições http, ou seja, estabelecer as regras de acesso
@@ -89,6 +92,8 @@ public class SecurityConfiguration {
                     // último nessas declarações
                     authorize.anyRequest().authenticated();
                 })
+                // Adicionando o OAuth2Login
+                .oauth2Login(Customizer.withDefaults())
                 .build();
     }
 
