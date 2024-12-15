@@ -121,7 +121,10 @@ public class SecurityConfiguration {
     // Agora a gente conseguiu conectar a nossa base de usuários, nossa tabela de usuarios, através de UsuarioService,
     // UsuarioRepository com a UserDetails que vai retornar uma instância de UserDetails já com username, password e com
     // as roles para o Spring saber quais são as permissões daquele usuário
-    @Bean
+    // O UserDetailsService é o que atualmente provê a authentication através do CustomUserDetailsService, entao eu vou
+    // desabilitar ele comentando a anotação Bean para que ele não seja mais registrado e agora o que o Spring vai
+    // registrar vai ser o nosso provider customizado
+    //@Bean
     public UserDetailsService userDetailsService(PasswordEncoder encoder, UsuarioService usuarioService) {
         // Esse CustomUserDetailsService precisa do UsuarioService pra funcionar, então vamos vir aqui e injetar o
         // UsuarioService
