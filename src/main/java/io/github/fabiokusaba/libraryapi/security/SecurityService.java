@@ -21,10 +21,23 @@ public class SecurityService {
         // dentro do contexto do Spring Security eu consigo pegar esse objeto Authentication
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        // Vamos verificar se a authentication é uma instância de CustomAuthentication
+        if (authentication instanceof CustomAuthentication customAuth) {
+            // Se sim, então vou retornar o usuário que está contido no meu customAuth, o processo ficou até mais fácil
+            // porque não precisamos ir ao banco o CustomAuthentication já tem esse usuário
+            // Desta forma, a CustomAuthentication é a única forma de eu conseguir o usuário da aplicação então a partir
+            // de agora alteramos o SecurityService e vamos conseguir descobrir qual é o usuário que está autenticado e
+            // quando for fazer uma requisição para salvar um livro ou então salvar um autor ele vai popular aquela
+            // informação
+            return customAuth.getUsuario();
+        }
 
-        String login = userDetails.getUsername();
+        // Caso contrário, retornaremos um nulo
+        return null;
 
-        return usuarioService.obterPorLogin(login);
+        // Não vamos precisar mais do trecho de código abaixo porque não estamos utilizando mais o UserDetails
+        //UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        //String login = userDetails.getUsername();
+        //return usuarioService.obterPorLogin(login);
     }
 }
