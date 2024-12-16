@@ -55,16 +55,15 @@ public class SecurityConfiguration {
                 // aplicações consigam fazer uma requisição
                 .csrf(AbstractHttpConfigurer::disable)
                 // Vou habilitar o formulário padrão do Spring Security
-                //.formLogin(Customizer.withDefaults())
-                // Customizando o formulário de login
-//                .formLogin(configurer -> {
-//                    // O permitAll vai fazer com que todos consigam acessar a página de login, ou seja, ela não vai
-//                    // estar protegida com autenticação
-//                    configurer.loginPage("/login");
-//                })
                 // Para demonstrar o login pelo Google vamos utilizar o default do formLogin porque ele vai adicionar
                 // automaticamente o botão para logarmos pelo Google
-                .formLogin(Customizer.withDefaults())
+                //.formLogin(Customizer.withDefaults())
+                // Customizando o formulário de login
+                .formLogin(configurer -> {
+                    // O permitAll vai fazer com que todos consigam acessar a página de login, ou seja, ela não vai
+                    // estar protegida com autenticação
+                    configurer.loginPage("/login");
+                })
                 // Configurando o httpBasic
                 .httpBasic(Customizer.withDefaults())
                 // Por último vou autorizar requisições http, ou seja, estabelecer as regras de acesso
@@ -104,7 +103,11 @@ public class SecurityConfiguration {
                     // nossa CustomAuthentication, vamos criar a implementação dessa classe para fazer essa lógica
                     // Para passarmos a nossa classe LoginSocialSuccessHandler para cá precisamos injetá-la no security
                     // FilterChain
-                    oauth2.successHandler(successHandler);
+                    oauth2
+                            // Dizendo ao oauth2 que ele vai utilizar o mesmo formulário, ou seja, tanto oauth2 quanto
+                            // formLogin vão apontar para a mesma página
+                            .loginPage("/login")
+                            .successHandler(successHandler);
                 })
                 .build();
     }
