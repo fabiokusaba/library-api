@@ -1,6 +1,7 @@
 package io.github.fabiokusaba.libraryapi.config;
 
 import io.github.fabiokusaba.libraryapi.security.CustomUserDetailsService;
+import io.github.fabiokusaba.libraryapi.security.LoginSocialSuccessHandler;
 import io.github.fabiokusaba.libraryapi.service.UsuarioService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,7 +44,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfiguration {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, LoginSocialSuccessHandler successHandler) throws Exception {
         // Habilitando as configurações padrão
         return http
                 // Configuração que utilizamos quando estavamos trabalhando com aplicações web, proteção de páginas web
@@ -94,7 +95,17 @@ public class SecurityConfiguration {
                     authorize.anyRequest().authenticated();
                 })
                 // Adicionando o OAuth2Login
-                .oauth2Login(Customizer.withDefaults())
+                .oauth2Login(oauth2 -> {
+                    // Configurando manualmente
+                    // Quando ele fizer autenticação com sucesso ele vai chamar essa classe que vou passar aqui, então
+                    // ele precisa de uma instância de AuthenticationSuccessHandler, basicamente ele vai se autenticar
+                    // via Google ou via OAuth2 e depois que ele logar com sucesso ele vai chamar essa classe passando
+                    // essa authentication, então a gente vai receber nessa classe authentication e vai transformar na
+                    // nossa CustomAuthentication, vamos criar a implementação dessa classe para fazer essa lógica
+                    // Para passarmos a nossa classe LoginSocialSuccessHandler para cá precisamos injetá-la no security
+                    // FilterChain
+                    oauth2.successHandler(successHandler);
+                })
                 .build();
     }
 
