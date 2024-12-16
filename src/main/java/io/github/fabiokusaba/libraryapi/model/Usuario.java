@@ -23,6 +23,9 @@ public class Usuario {
     @Column
     private String senha;
 
+    @Column
+    private String email;
+
     // Aqui nesse campo temos um detalhe importante, uma configuração a se fazer, lá no banco de dados esse tipo de dado
     // é um Array, no Java ele é uma lista de Strings, será que o JPA vai saber traduzir essa lista de Strings para um
     // Array no banco de dados? A resposta é não, mas tem uma biblioteca que vamos utilizar aqui que vai permitir que a
