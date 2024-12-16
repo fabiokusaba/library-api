@@ -34,7 +34,10 @@ public class CustomAuthentication implements Authentication {
         // SimpleGrantedAuthority é uma implementação simples de GrantedAuthority que recebe uma role e adiciona
         return this.usuario.getRoles()
                 .stream()
-                .map(role -> new SimpleGrantedAuthority(role))
+                //.map(role -> new SimpleGrantedAuthority(role))
+                // Utilizando method reference -> basicamente estou chamando o construtor passando como aqui é um
+                // metodo map ele passa a String role por parâmetro
+                .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
     }
 
