@@ -14,6 +14,7 @@ import org.springframework.security.web.authentication.SavedRequestAwareAuthenti
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.List;
 
 // Aqui precisamos implementar a interface AuthenticationSuccessHandler, mas podemos utilizar uma implementação que ele
 // já tem então para isso vamos extender de SavedRequestAwareAuthenticationSuccessHandler
@@ -24,6 +25,8 @@ import java.io.IOException;
 @Component // Registranto no nosso contexto
 @RequiredArgsConstructor // Criando um construtor com os argumentos necessários
 public class LoginSocialSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
+
+    private static final String SENHA_PADRAO = "321";
 
     private final UsuarioService usuarioService;
 
@@ -44,6 +47,17 @@ public class LoginSocialSuccessHandler extends SavedRequestAwareAuthenticationSu
         // Com o email em mãos basta injetarmos o nosso service para buscarmos o usuário pelo email
         Usuario usuario = usuarioService.obterPorEmail(email);
 
+        // Dessa forma que fizemos a implementação o usuário já precisa estar cadastrado no banco de dados porque quando
+        // a gente faz o login social ele vai pegar o usuário pelo email e vai criar a CustomAuthentication e depois
+        // setar essa authentication no SecurityContextHolder, mas o que acontece se eu fizer o login com o Google e
+        // esse usuário não existir? A authentication vai estar nula e qual estratégia podemos utilizar para resolver
+        // esse problema? Quando ele se autenticar com o Google nós podemos cadastrar ele, então podemos fazer uma
+        // verificação se o usuário é nulo, ou seja, ele não achou um usuário para esse email é a primeira vez que ele
+        // está logando com o Google e com esse email, ele não está previamente cadastrado
+        if (usuario == null) {
+            usuario = cadastrarUsuarioNaBase(email);
+        }
+
         // Agora vamos partir para a criação da nossa CustomAuthentication passando o usuário que vai fazer parte da
         // sessão
         CustomAuthentication customAuthentication = new CustomAuthentication(usuario);
@@ -57,5 +71,26 @@ public class LoginSocialSuccessHandler extends SavedRequestAwareAuthenticationSu
         // Agora eu preciso chamar o super para continuar, ou seja, para dar continuidade a essa requisição passando
         // esses três parâmetros
         super.onAuthenticationSuccess(request, response, customAuthentication);
+    }
+
+    private Usuario cadastrarUsuarioNaBase(String email) {
+        Usuario usuario;
+        // Instânciando um novo usuário
+        usuario = new Usuario();
+        usuario.setEmail(email);
+        usuario.setLogin(obterLoginApartirDoEmail(email));
+        usuario.setSenha(SENHA_PADRAO);
+        usuario.setRoles(List.of("OPERADOR"));
+
+        // Chamando o service para salvar esse usuário
+        usuarioService.salvar(usuario);
+        return usuario;
+    }
+
+    private String obterLoginApartirDoEmail(String email) {
+        // Nota: da posição "0" até o índice do "@", ou seja, se o email for pessoa@email.com ele vai pegar da posição
+        // "0" da String, início da palavra pessoa, até a letra "a" que vem antes do "@"
+        // No metodo substring o segundo index é exclusivo
+        return email.substring(0, email.indexOf("@"));
     }
 }
