@@ -1,0 +1,99 @@
+## Hexagonal Architecture
+Nós temos alguns elementos muito importantes: o primeiro deles é o hexágono, o segundo são as portas, o terceiro são os
+adaptadores.
+Hexágono: é a aplicação em si, é onde vai concentrar as suas regras de negócio, a sua lógica de negócio vai estar dentro
+do hexágono.
+Como esse hexágono vai ser implementado a arquitetura hexagonal não define, ela não opina sobre o desenvolvimento, sobre
+a estrutura de diretórios, o nome das classes, ela só te diz que o hexágono será a aplicação, onde vai se concentrar o
+seu domínio.
+Então, a primeira coisa que temos que ter em mente é que quando falamos de aplicação estamos falando de hexágono e que
+quando falamos de hexágono estamos falando de aplicação.
+Fazendo parte do hexágono, parte da aplicação, nós temos o segundo elemento que são as portas. As portas estão nas
+bordas do hexágono, estão na fronteira do hexágono com o mundo externo e as portas elas são digamos como ponto de
+entrada para a aplicação, são contratos que dirão o que o mundo externo pode fazer dentro do hexágono.
+Essas portas no final de tudo são interfaces, contratos onde está descrito o que você pode realizar dentro do hexágono,
+por exemplo se eu quero cadastrar uma conta bancária eu tenho que passar por uma porta e essa porta vai ter o contrato
+dela dizendo que eu posso criar a conta bancária.
+Além da porta nós vamos ter os adaptadores e aí vamos adentrar em um assunto um pouco mais amplo porque quando a gente
+fala de adaptadores na Hexagonal Architecture nós temos dois lados: o lado esquerdo e o lado direito. No lado esquerdo
+nós temos o chamado driver side e no lado direito nós temos o driven side, no lado esquerdo nós temos os primary actors,
+no lado direito nós temos os secondary actors.
+Então, do lado esquerdo onde nós temos aqui o caso de teste, o usuário, aplicações mobile, message broker nós temos os
+primary actors, nós temos o driver side e tudo o que está aqui a gente diz que vai acionar a aplicação, por exemplo se
+eu tenho um frontend esse frontend vai conversar, por exemplo, com uma API Rest, quando o usuário entrar na tela do
+frontend ele vai preencher os dados de uma conta bancária e vai clicar no botão criar, quando ele clicar no botão criar
+esse conjunto de informações será enviado para um endpoint na nossa API Rest e essa API Rest ela vai bater numa porta do
+hexágono e nessa porta vai ter lá a opção de criar uma conta bancária, aí essa tarefa de criar uma conta bancária ela
+vai ser executada dentro do nosso hexágono de acordo com as regras de negócio que foram estabelecidas.
+Perceba que aqui temos um fluxo no lado driver onde teremos um adaptador, que no nosso caso seria a nossa API Rest, que
+vai bater na porta específica para esse adaptador e essa porta vai mandar para dentro as informações que foram coletadas
+via API Rest para o hexágono e o hexágono em posse dessas informações vai executar a tarefa de criar uma conta bancária.
+Porém, nesse momento quando o hexágono receber as informações para criar a conta bancária ele vai ter algumas
+necessidades, por exemplo quando eu vou criar uma conta bancária eu preciso persistir a informação dessa conta bancária
+então nesse momento eu vou precisar de um banco de dados e aqui entra o driven side.
+Só que agora, no driven side, não é mais um dispositivo, ou um adaptador do driver side que está acionando a aplicação,
+mas sim o contrário onde a aplicação está acionando alguém para realizar a tarefa de criar a conta bancária, então agora
+a aplicação está iniciando uma conversa com o mundo externo e essa comunicação também é feita através de uma porta só
+que essa porta agora vai estar do lado driven side.
+Então, nós temos driver ports e driven ports, ou seja, portas que são do lado driver e acionam a aplicação e portas que
+estão do lado driven aonde a aplicação aciona essas portas.
+A aplicação vai bater numa porta específica para um banco de dados e no momento em que ela bater nessa porta se o
+contrato ali disser que ela pode criar uma conta bancária ela então vai acionar um adaptador específico para o banco de
+dados, esse adaptador se refere a uma tecnologia da mesma maneira que o adaptador do driver se refere, quando nós
+fizemos a entrada da informação nós usamos um adaptador que é uma API Rest, essa API Rest é desenvolvida numa tecnologia
+então ela pode ter sido desenvolvida usando Spring Boot, .NET, Python, PHP.
+É muito importante que esse conhecimento fique bem claro, tudo o que está no driver side aciona a aplicação e tudo o que
+está no driven side é acionado pela aplicação.
+Quando falamos de driven side nós temos dois tipos de adaptadores que pode ser: recipient ou repository. O que
+diferencia um do outro? Quando nós falamos de adaptadores repository nós estamos falando de adaptadores que podem tanto
+enviar informações, ou seja, a aplicação tanto pode enviar informações pra ele quando pode receber informações dele, um
+exemplo disso é o banco de dados onde a aplicação pode fazer um select e buscar informação ao mesmo tempo em que ela
+também pode enviar uma informação para o banco de dados através de um insert.
+No caso do SMTP Server ele é recipient porque a aplicação não recebe informação dele, ela só envia informação pra ele
+então por exemplo, se a aplicação quer enviar um email ela manda a informação para o adaptador SMTP Server que vai
+enviar o email e acabou, não devolvendo nada a aplicação de informação, é apenas um envio da informação.
+Configurable Dependency Pattern: nada mais é do que a injeção de dependência. A arquitetura hexagonal faz muito uso da
+injeção de dependência porque você não pode acessar através de um adaptador diretamente o domínio da aplicação, ele
+precisa passar por uma porta e para isso você lança a mão da injeção de dependência na hora de você fazer essa conversa
+ou seja, ao invés de você depender de classes concretas você vai depender de interfaces tanto do lado driver quanto do
+lado driven sendo que a diferença é que no lado driver você vai usar a porta e no lado driven vai ser implementada a
+porta.
+Simetria e Assimetria da Arquitetura: a arquitetura hexagonal se diferencia de uma arquitetura em camadas porque, por
+exemplo, na arquitetura em camadas você tem claramente um user side e um data side, ou seja, você tem uma parte do
+usuário e uma parte do dado e isso não é simétrico, uma coisa não se iguala a outra, uma coisa não corresponde a outra,
+são coisas diferentes e assimetria é isso e quando você tem simetria você tem uma semelhança, uma correspondência. E no
+caso da arquitetura em camadas você não tem porque você tem de um lado o usuário e do outro os dados. Quando a gente
+fala da arquitetura hexagonal nós temos do lado esquerdo adaptadores, nós temos tecnologia, do lado direito nós também
+temos tecnologia então nesse sentido a arquitetura ela é simétrica, ou seja, nós temos uma correspondência do lado
+esquerdo com o lado direito ainda que nós tenhamos ali algumas diferenças quando nós falamos da comunicação do hexágono
+com o lado driver e do hexágono com o lado driven e aí que entra a assimetria, apesar dos dois lados você ter tecnologia
+nesse sentido você tem simetria, você também tem assimetria porque do lado driver você usa a porta, você não implementa,
+a porta do lado driver vai ser implementada pela aplicação/hexágono, já do lado direito é o contrário a porta não é
+implementada pelo hexágono, ela vai ser implementada pelo adaptador do lado driven e nesse sentido nós temos uma
+assimetria.
+Então, nós temos simetria porque nos dois lados nós temos tecnologias e nós temos assimetria porque de um lado os
+adaptadores conversam com a porta, usam a porta e do outro lado os adaptadores implementam as portas então nós não temos
+uma correspondência nesse sentido, por isso ela é simétrica e assimétrica ao mesmo tempo.
+Erros comuns relacionados a Arquitetura Hexagonal: muitos tratam a arquitetura hexagonal como se ela fosse uma
+arquitetura em camadas, mas ele não é. Quem escreve e fala dela como sendo uma arquitetura em camada imagina os
+adaptadores como uma camada, as portas como outra camada e o hexágono como outra camada, mas isso não é a realidade, a
+realidade é que você tem uma aplicação e ao redor dessa aplicação você tem componentes tecnológicos.
+Quando olhamos para o hexágono também surge a dúvida se a arquitetura hexagonal tem que necessariamente ser representada
+dessa forma e não, na verdade a escolha do hexágono foi por ter sido a figura que melhor representou a arquitetura e não
+que ela seja exatamente um hexágono que possui seis lados.
+Um outro erro comum é o acesso direto as portas e isso não está correto, a forma correta de acessar o hexágono é a
+seguinte: actor -> adapter -> port -> application (hexágono). Ou seja, você tem que ter um adaptador conversando com uma
+porta e aí sim você vai ter acesso ao hexágono e não uma porta conversando com adaptador para acessar o hexágono.
+Prós: melhora na testabilidade, melhora na manutenção, flexibilidade, imunidade a evolução da tecnologia, postergar
+decisões tecnológicas, por exemplo você não precisa ficar preocupado com a tecnologia que você vai utilizar para banco
+de dados num primeiro momento, você pode se preocupar apenas com o desenvolvimento do hexágono, ou seja, com o seu
+domínio, com as regras de negócio, com a lógica de negócio que você precisa ter.
+Contras: complexidade, desempenho do processo de build, indireção e mapeamentos, ou seja, já que você tem agora
+adaptadores ao redor do seu domínio e no seu domínio você vai ter, por exemplo, entidades, e por boa prática você não
+trafega entidades então em vários momentos você vai ter que fazer algum mapeamento de pegar a sua entidade converter
+para um DTO e mandar esse DTO para o adaptador.
+Quando usar a Arquitetura Hexagonal? Um conselho que você vai ver no uso da arquitetura hexagonal é que se você tem uma
+coisa muito simples a ser desenvolvida, por exemplo CRUD, você não precisa de arquitetura hexagonal, você só tornaria a
+coisa mais complexa e não teria nenhum ganho ao adotar a arquitetura hexagonal. Então, para domínios mais complexos onde
+você tem um domínio com vários subdomínios, com vários agregados, com várias entidades, com muitas regras de negócio
+nesse caso a arquitetura hexagonal te ajudaria.
