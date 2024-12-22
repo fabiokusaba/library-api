@@ -121,17 +121,17 @@ public class SecurityConfiguration {
     // PasswordEncoder registrado aqui no nosso container que é esse aqui do BCrypt e se algum dia eu quiser mudar a
     // forma de criptografia basta mudar aqui e o resto do sistema vai continuar funcionando porque estamos utilizando
     // a interface
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        // Uma vez que a gente codifica essa senha, a gente criptografa ela em BCrypt, não é possível ela voltar atrás
-        // ou seja, se você pegar o hash BCrypt você não consegue decodificar ele pra descobrir o que ele significa
-        // Ele consegue através de, por exemplo, comparar esse número "123" com o hash gerado por esse número se é
-        // compatível, se foi gerado aquele hash a partir daquela senha digitada, então é assim que ele diz se bate ou
-        // não as senhas, ele não criptografa e compara os dois ele apenas verifica se aquela String foi utilizada para
-        // gerar aquele hash
-        // E aqui você pode botar uma força para dizer quantas vezes ele vai passar em cima daquele BCrypt
-        return new BCryptPasswordEncoder(10);
-    }
+//    @Bean
+//    public PasswordEncoder passwordEncoder() {
+//        // Uma vez que a gente codifica essa senha, a gente criptografa ela em BCrypt, não é possível ela voltar atrás
+//        // ou seja, se você pegar o hash BCrypt você não consegue decodificar ele pra descobrir o que ele significa
+//        // Ele consegue através de, por exemplo, comparar esse número "123" com o hash gerado por esse número se é
+//        // compatível, se foi gerado aquele hash a partir daquela senha digitada, então é assim que ele diz se bate ou
+//        // não as senhas, ele não criptografa e compara os dois ele apenas verifica se aquela String foi utilizada para
+//        // gerar aquele hash
+//        // E aqui você pode botar uma força para dizer quantas vezes ele vai passar em cima daquele BCrypt
+//        return new BCryptPasswordEncoder(10);
+//    }
 
     // Agora a gente conseguiu conectar a nossa base de usuários, nossa tabela de usuarios, através de UsuarioService,
     // UsuarioRepository com a UserDetails que vai retornar uma instância de UserDetails já com username, password e com
@@ -140,37 +140,37 @@ public class SecurityConfiguration {
     // desabilitar ele comentando a anotação Bean para que ele não seja mais registrado e agora o que o Spring vai
     // registrar vai ser o nosso provider customizado
     //@Bean
-    public UserDetailsService userDetailsService(PasswordEncoder encoder, UsuarioService usuarioService) {
-        // Esse CustomUserDetailsService precisa do UsuarioService pra funcionar, então vamos vir aqui e injetar o
-        // UsuarioService
-        return new CustomUserDetailsService(usuarioService);
-
-        // Criando usuários em memória
-        // Essa classe User é um builder para construir UserDetails
-        //UserDetails user1 = User.builder()
-                //.username("usuario")
-                // Aqui na senha a gente tem um detalhe bem importante que é: o Spring Security precisa saber como ele
-                // vai comparar a senha digitada com essa senha que está salva em memória ou no banco de dados
-                // O Spring Security obriga a gente a disponibilizar um codificador e decodificador de senhas para que
-                // ele consiga comparar as senhas e também para que a nossa aplicação fique mais segura porque não faz
-                // sentido salvar a senha hard coded, ou seja, do jeito que o usuário digitou a senha eu salvar no banco
-                // Eu tenho que criptografar aquela senha para que ninguém consiga acessar do contrário não faz sentido
-                // eu ter essa segurança na aplicação
-                // Como já declarei o PasswordEncoder basta eu injetar aqui passando como parâmetro e agora basta eu
-                // chamar o metodo encode passando a senha que quero criptografar
-                //.password(encoder.encode("123"))
-                // Geralmente as roles colocamos em caixa alta
-                //.roles("USER")
-                //.build();
-
-        //UserDetails user2 = User.builder()
-                //.username("admin")
-                //.password(encoder.encode("321"))
-                //.roles("ADMIN")
-                //.build();
-
-        //return new InMemoryUserDetailsManager(user1, user2);
-    }
+//    public UserDetailsService userDetailsService(PasswordEncoder encoder, UsuarioService usuarioService) {
+//        // Esse CustomUserDetailsService precisa do UsuarioService pra funcionar, então vamos vir aqui e injetar o
+//        // UsuarioService
+//        return new CustomUserDetailsService(usuarioService);
+//
+//        // Criando usuários em memória
+//        // Essa classe User é um builder para construir UserDetails
+//        //UserDetails user1 = User.builder()
+//                //.username("usuario")
+//                // Aqui na senha a gente tem um detalhe bem importante que é: o Spring Security precisa saber como ele
+//                // vai comparar a senha digitada com essa senha que está salva em memória ou no banco de dados
+//                // O Spring Security obriga a gente a disponibilizar um codificador e decodificador de senhas para que
+//                // ele consiga comparar as senhas e também para que a nossa aplicação fique mais segura porque não faz
+//                // sentido salvar a senha hard coded, ou seja, do jeito que o usuário digitou a senha eu salvar no banco
+//                // Eu tenho que criptografar aquela senha para que ninguém consiga acessar do contrário não faz sentido
+//                // eu ter essa segurança na aplicação
+//                // Como já declarei o PasswordEncoder basta eu injetar aqui passando como parâmetro e agora basta eu
+//                // chamar o metodo encode passando a senha que quero criptografar
+//                //.password(encoder.encode("123"))
+//                // Geralmente as roles colocamos em caixa alta
+//                //.roles("USER")
+//                //.build();
+//
+//        //UserDetails user2 = User.builder()
+//                //.username("admin")
+//                //.password(encoder.encode("321"))
+//                //.roles("ADMIN")
+//                //.build();
+//
+//        //return new InMemoryUserDetailsManager(user1, user2);
+//    }
 
     // A configuração é bem simples basta retornarmos a instância dele e no construtor a gente passa qual prefixo que
     // a gente quer, passando nada ele vai simplesmente ignorar esse prefixo ROLE ou podemos customizar com um prefixo
