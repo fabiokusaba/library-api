@@ -17,6 +17,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -109,7 +111,36 @@ public class SecurityConfiguration {
                             .loginPage("/login")
                             .successHandler(successHandler);
                 })
+                // Configurando o ResourceServer -> configuração padrão JWT
+                // Basicamente estou dizendo que vou utilizar o JWT para validar o usuário
+                .oauth2ResourceServer(oauth2RS -> oauth2RS.jwt(Customizer.withDefaults()))
                 .build();
+    }
+
+    // A configuração é bem simples basta retornarmos a instância dele e no construtor a gente passa qual prefixo que
+    // a gente quer, passando nada ele vai simplesmente ignorar esse prefixo ROLE ou podemos customizar com um prefixo
+    // de nossa escolha
+    @Bean
+    public GrantedAuthorityDefaults grantedAuthorityDefaults() {
+        return new GrantedAuthorityDefaults("");
+    }
+
+    // Configurando os scopes do token -> se você for utilizar o Client Credentials, por exemplo, quando chegar para
+    // definir qual é a permissão de usuário ele vai vir SCOPE_GERENTE só que a gente não trabalha com prefixo, então
+    // esse JwtAuthenticationConverter vai servir para quando chegar aqui o token JWT ele vai pegar o scope daquele
+    // token e vai definir qual vai ser o prefixo e no nosso caso não queremos colocar prefixo
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        // Eliminando o uso do prefixo
+        var authoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        authoritiesConverter.setAuthorityPrefix("");
+
+        // Criando o converter JwtAuthenticationConverter
+        var converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
+
+        // Retornando esse nosso converter
+        return converter;
     }
 
     // Declarando um Bean que vai ser uma instância de PasswordEncoder, essa interface possui metodos para criptografar
@@ -171,12 +202,4 @@ public class SecurityConfiguration {
 //
 //        //return new InMemoryUserDetailsManager(user1, user2);
 //    }
-
-    // A configuração é bem simples basta retornarmos a instância dele e no construtor a gente passa qual prefixo que
-    // a gente quer, passando nada ele vai simplesmente ignorar esse prefixo ROLE ou podemos customizar com um prefixo
-    // de nossa escolha
-    @Bean
-    public GrantedAuthorityDefaults grantedAuthorityDefaults() {
-        return new GrantedAuthorityDefaults("");
-    }
 }
