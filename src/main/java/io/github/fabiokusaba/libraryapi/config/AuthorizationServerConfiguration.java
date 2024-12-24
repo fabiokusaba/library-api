@@ -1,5 +1,10 @@
 package io.github.fabiokusaba.libraryapi.config;
 
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -8,6 +13,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
@@ -15,7 +21,12 @@ import org.springframework.security.oauth2.server.authorization.settings.OAuth2T
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.web.SecurityFilterChain;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
+import java.util.UUID;
 
 @Configuration
 @EnableWebSecurity
@@ -72,5 +83,64 @@ public class AuthorizationServerConfiguration {
         return ClientSettings.builder()
                 .requireAuthorizationConsent(false)
                 .build();
+    }
+
+    // Isso aqui é para gerar o token JWK, que significa JSON Web Key, que é uma representação em JSON de uma chave
+    // criptográfica que pode ser usada em processos de autenticação e assinatura digital especialmente quando estamos
+    // trabalhando com JWT, então a gente está trabalhando com JWT e a gente precisa de uma chave, um token JWK que é
+    // para ele assinar o token
+    @Bean
+    public JWKSource<SecurityContext> jwkSource() throws Exception {
+        // Aqui a gente vai precisar de uma chave e vamos utilizar uma RSAKey que vamos passar no nosso jwkSet
+        // Uma chave RSA é um tipo de chave criptográfica usada em criptografia assimétrica, então é um metodo de
+        // criptografia onde a gente tem duas chaves diferentes: uma chave pública e uma privada, um dos algoritmos mais
+        // utilizados para troca segura de informações e assinatura digital
+        // Os componentes de uma chave RSA são: nós temos a chave pública que serve para criptografar os dados e ela
+        // pode ser compartilhada publicamente sem comprometer a segurança. E ela tem uma chave privada que é usada para
+        // descriptografar dados que foram criptografados com a chave pública, essa chave precisa ser mantida em segredo
+        // nesse caso só quem sabe da chave privada é o servidor (AuthorizationServer) que vai utilizar para validar o
+        // token e descriptografar ele
+        RSAKey rsaKey = gerarChaveRSA();
+
+        // Para conseguirmos uma instância de JWKSource temos aqui um objeto que é o JWKSet, então precisamos criar uma
+        // instância de JWKSet e ele precisa de uma JWK key
+        JWKSet jwkSet = new JWKSet(rsaKey);
+
+        // E aqui a gente retorna um ImmutableJWKSet passando o jwkSet como parâmetro
+        return new ImmutableJWKSet<>(jwkSet);
+    }
+
+    private RSAKey gerarChaveRSA() throws Exception {
+        // Primeiramente vou precisar de um par de chaves e para isso vamos utilizar o KeyPairGenerator passando o
+        // algoritmo, no nosso caso o RSA
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+
+        // Agora que tenho o keyPairGenerator vou inicializar ele com 2048 bits
+        keyPairGenerator.initialize(2048);
+
+        // Agora através desse keyPairGenerator vou criar um par de chaves com KeyPair, uma chave pública e uma chave
+        // privada
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+
+        // E o que vou precisar para gerar a minha RSA? Como esse par de chaves que gerei é uma RSA então vou pegar
+        // primeiro a chave pública, como é uma classe genérica aqui vou precisar fazer o casting
+        RSAPublicKey chavePublica = (RSAPublicKey) keyPair.getPublic();
+
+        // E aqui também vou pegar a chave privada
+        RSAPrivateKey chavePrivada = (RSAPrivateKey) keyPair.getPrivate();
+
+        // Agora vou precisar do builder de RSAKey, no primeiro parâmetro vou passar a chavePublica, chamo o metodo
+        // privateKey para passar a chavePrivada, preciso gerar o id para essa chave com o keyID
+        return new RSAKey
+                .Builder(chavePublica)
+                .privateKey(chavePrivada)
+                .keyID(UUID.randomUUID().toString())
+                .build();
+    }
+
+    // Decoder -> como decodifica o token JWT
+    @Bean
+    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
+        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
     }
 }
