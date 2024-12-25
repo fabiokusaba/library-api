@@ -1,6 +1,7 @@
 package io.github.fabiokusaba.libraryapi.config;
 
 import io.github.fabiokusaba.libraryapi.security.CustomUserDetailsService;
+import io.github.fabiokusaba.libraryapi.security.JwtCustomAuthenticationFilter;
 import io.github.fabiokusaba.libraryapi.security.LoginSocialSuccessHandler;
 import io.github.fabiokusaba.libraryapi.service.UsuarioService;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -46,7 +48,11 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfiguration {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, LoginSocialSuccessHandler successHandler) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            LoginSocialSuccessHandler successHandler,
+            // Injetando o nosso filtro customizado
+            JwtCustomAuthenticationFilter jwtCustomAuthenticationFilter) throws Exception {
         // Habilitando as configurações padrão
         return http
                 // Configuração que utilizamos quando estavamos trabalhando com aplicações web, proteção de páginas web
@@ -113,7 +119,11 @@ public class SecurityConfiguration {
                 })
                 // Configurando o ResourceServer -> configuração padrão JWT
                 // Basicamente estou dizendo que vou utilizar o JWT para validar o usuário
-                .oauth2ResourceServer(oauth2RS -> oauth2RS.jwt(Customizer.withDefaults()))
+                .oauth2ResourceServer(oauth2RS ->
+                        oauth2RS.jwt(Customizer.withDefaults()))
+                // Adicionando o nosso filtro customizado depois do BearerTokenAuthenticationFilter (recebe o token e
+                // faz a verificação dele e gera o JwtAuthenticationToken)
+                .addFilterAfter(jwtCustomAuthenticationFilter, BearerTokenAuthenticationFilter.class)
                 .build();
     }
 
