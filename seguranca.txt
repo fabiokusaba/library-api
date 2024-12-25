@@ -67,3 +67,141 @@ dizer que estou autenticado mas eu não tenho permissão.
 - A diferença entre Authority e Role é justamente essa: a Role é um grupo de usuário, é um papel que você exerce, e a
 Authority é uma permissão de executar uma tarefa, uma operação.
 - Então, a gente pode dizer que o grupo de usuário carrega várias authorities.
+
+## Login Social e Autenticando com Google
+- A primeira coisa que precisamos fazer é criar uma credencial para nossa aplicação lá dentro do Google, então o Google
+precisa saber que essa aplicação vai utilizar o serviço de autenticação deles pra liberar o acesso para o usuário.
+- Para isso precisamos acessar o Google Cloud, serviço de cloud da Google equivalente a AWS da Amazon, acessando a page
+clicamos em console para acessar o console do GCP, painel que usamos para acessar os serviços do Google Cloud, e damos
+início a criação do nosso projeto.
+- Clicamos no menu lateral, APIs e serviços, credenciais, na primeira vez precisamos configurar a tela de consentimento,
+tela que aparece quando você vai acessar um site e aparece a mensagem perguntando se você deseja que essa aplicação
+acesse suas informações do Google.
+- Passamos para as configurações: selecionamos externo, colocamos o nome da aplicação, etc...
+- Em credenciais vamos em criar credenciais e selecionamos ID do cliente OAuth porque o Google vai ser o nosso servidor
+de autorização nesse caso, ele que vai autenticar o usuário, identificar quem é ele e vai retornar para a aplicação a
+credencial dele.
+- Nas origens JavaScript autorizadas aqui é importante colocar 'http://localhost:8080', isso representa as origens que
+vão acessar o serviço, de onde vão vir as requisições para ele autenticar, ou seja, de onde vai partir a requisição pra
+ele autorizar, qualquer URL diferente da que colocamos aqui ele não vai aceitar.
+- Em URIs de redirecionamento autorizados colocamos: 'http://localhost:8080/login/oauth2/code/google', que é a URL
+padrão de redirecionamento.
+- Superadas a etapa de configuração vamos ir até o nosso projeto para fazer o registro desse meio de autenticação.
+- Adicionaremos no pom.xml o starter do OAuth2-Client e em seguida no nosso application.yml vamos fazer a configuração
+da credencial, logo na sequência vamos até a nossa classe SecurityConfiguration para mais implementações.
+- Como estamos logados com o Google ele não vai retornar um objeto UserDetails do jeito que esperamos lá na nossa
+autenticação, objeto que capturamos no SecurityService, então lá no nosso serviço quando queremos obter o usuário que
+está logado, objeto Usuário, a gente pega a authentication e dela pegamos o UserDetails, o login e retornamos o usuário.
+- Com o Google isso aqui não está funcionando porque ele não tem esse objeto UserDetails, ele retorna um objeto usuário
+do OAuth2 com algumas informações e a ideia é que a gente extraia essas informações e crie nossa própria autenticação.
+- Então, se você quer utilizar um login social como Google, Facebook, Github, você tem que pegar os dados de lá e
+traduzir para o tipo de usuário que você usa na sua aplicação que no nosso caso é a entidade Usuario que tem as roles,
+login e a senha.
+- O que vamos fazer a partir de agora é customizar esse usuário, unificar ele para que qualquer autenticação sempre
+retorne pra gente esse usuário.
+- Precisamos criar uma autenticação customizada, ou seja, o authentication, objeto central que é gerado em cada uma das
+formas de autenticação, então precisamos prover uma instância de authentication para o contexto do Spring e aquele
+objeto authentication vai carregar a identificação de quem está logado, da sessão de usuário, etc.
+- Precisamos dizer ao Spring que ele vai utilizar a nossa authentication customizada então ele não vai mais utilizar
+esse UserDetails para criar uma authentication a gente vai criar a nossa própria com o nosso usuário logado isso vai
+facilitar quando a gente for customizar para o login do Google, pois o login do Google retorna um objeto diferente do
+que a gente quer que é o tipo Usuario, o Google não conhece a entidade Usuario, então a gente vai pegar alguns dados da
+autenticação do Google e vai transformar nessa authentication unificada que tem o Usuario dentro, ficando tudo unificado
+independente do tipo de autenticação.
+- 403 Forbibben: acontece quando estou autenticado, porém não tenho permissão de acesso para esse endpoint, mas sabemos
+que o gerente ele está configurado para acessar esse endpoint, no entanto, não estamos conseguindo acessar quebrando o
+que já tínhamos feito e por que isso acontece?
+- Porque o Spring trabalha com o prefixo chamado 'ROLE', então basicamente quando o Spring vai registrar as roles ele
+coloca assim: "ROLE_GERENTE", ele não utiliza essa role que colocamos aqui "GERENTE", ele adiciona um prefixo em todas
+elas e quando trabalhamos com UserDetailsService e retornamos esse objeto roles o que ele faz é colocar o prefixo "ROLE"
+em cada uma das roles para ficar dessa forma "ROLE_GERENTE".
+- O Spring utiliza esse prefixo porque existem roles e authorities, então a role ele coloca esse prefixo "ROLE_" e
+authority ele pode colocar outro prefixo "PERM_", "AUTH_", ele faz essa diferenciação.
+- Então, temos duas formas de resolver: uma delas é adicionarmos o prefixo "ROLE_" quando estivermos retornando uma
+SimpleGrantedAuthority. Ou podemos configurar o Spring Security para não trabalhar com esse prefixo "ROLE_" ou utilizar
+um outro prefixo customizado.
+- Para a gente ter uma forma de localizar esse usuário do Google, login social, com esses dados na nossa base a gente
+precisaria de um dado em comum, por enquanto não temos nenhum, mas existe um dado que podemos utilizar que é o email.
+O email é como se fosse a chave do gmail, do Google, o seu email é o seu identificador de usuário único então podemos
+utilizar ele pra fazer isso e para isso vamos precisar criar um campo em nosso banco que é o email, desta forma o email
+vai ser o nosso link tanto com o Google como com qualquer outro provedor de autenticação.
+- Nosso próximo passo: ele vai fazer o login social só que o nosso login social ele não entra no nosso Custom
+AuthenticationProvider que vai atender as nossas autenticações que criamos, basic e de formulário de login (usuário e
+senha), a authentication que vem lá do Google ela já vem pronta, ou seja, o Google recebe o login e a senha, valida
+dentro do seu próprio servidor, e nos devolve qual foi o usuário que se autenticou, mas quando o Google nos retorna
+esses dados ele já vem logado então ele não entra no CustomAuthenticationProvider, então preciso utilizar aqui dentro do
+Spring Security o recurso que recebe esse dado do Google, quando ele faz esse login com sucesso no Google e recebe essa
+authentication, pra gente pegar esses dados do usuário e transformar na nossa CustomAuthentication.
+- Dica: quando estiver implementando o login social você precisa ter uma estratégia para quando o usuário não estiver na
+sua base, você precisa ter uma forma de cadastrar ele, por exemplo: em alguns sites eles pedem para que você complete
+algumas informações.
+- Variáveis de ambiente: estratégia que podemos utilizar para manter seguro dados sensíveis da nossa aplicação como por
+exemplo as nossas credenciais do Google.
+
+## Resumo Login Social com Google
+1. Entrar no GCP (Google Cloud Platform)
+2. Criar as credenciais da aplicação no Google Cloud
+3. Adicionar a dependência spring-boot-starter-oauth2-client no arquivo pom.xml
+4. Registrar as credenciais no application.yml/application.properties
+- OBS: por questões de segurança prefira sempre utilizar variáveis de ambiente
+5. Habilitar o oauth2Login no SecurityFilterChain
+6. Criar uma Authentication customizada (opcional, somente em caso de você querer unificar e você querer utilizar as
+suas próprias roles, grupos de usuário)
+7. Implementar o AuthenticationSuccessHandler para receber a autenticação do Google e customizar para sua Authentication
+customizada
+
+## Criação de Authorization Server OAuth2 com JWT
+- O OAuth2 é um protocolo de autorização que permite que aplicativos acessem recursos de um usuário em outro serviço sem
+que o usuário precise compartilhar as suas credenciais, por exemplo o usuário não vai precisar compartilhar o login e a
+senha, em vez disso o OAuth2 vai usar os tokens de acesso.
+- Assim, ao invés da aplicação ficar passando o login e a senha do usuário pra acessar uma API, como é o caso da
+autenticação basic, então primeiro o usuário se autentica uma vez recebe o token e esse token tem uma duração, tempo de
+sessão, que ele pode usar para fazer as requisições.
+- E aquele token ali basicamente representa a sessão, autorização que aquele usuário tem para poder fazer as requisições
+- Fluxo: primeiramente temos um usuário que vai tentar acessar o sistema/aplicação, essa aplicação vai solicitar uma
+autenticação para o Authorization Server, um dos membros do protocolo, o usuário vai realizar o login com o
+Authorization Server, ou seja, mostrar quem ele é, identificar-se, se o usuário tiver autenticado o Authorization Server
+vai emitir um token, identificação do usuário através de token, o token passa para a aplicação cliente e agora a
+aplicação com o token em mãos o usuário acessa a API.
+- Os componentes que fazem parte do protocolo: Authorization Server, Resource Server, Usuário, Client.
+- Authorization Server: cadastramento de usuários e clients, então é ele quem vai guardar a base de dados de usuário.
+Realiza a autentificação e identificação daquele usuário por isso ele vai ter toda essa base de usuários e também os
+clients que estão registrados.
+- Resource Server: é aqui onde está localizada a API, serviço REST, de onde vão vir os dados que a aplicação client vai
+acessar.
+- Usuário: é a pessoa que está tentando acessar o sistema.
+- Client: é o sistema que está registrado no Authorization Server e que irá requisitar os dados do Resource Server.
+- Grant Types ou Fluxos de Autenticação: são as formas que o OAuth2 define para você se autenticar e vai depender do
+tipo de autenticação ou de client que você está se autenticando.
+- Password Flow (Deprecated - Inseguro): surgiu no OAuth1 e no OAuth2 ficou deprecated porque ele foi visto como não tão
+seguro. Basicamente ele funciona da seguinte forma: o usuário vai acessar uma aplicação client e aqui está o problema
+porque ele digita as credenciais no próprio client (login e senha), o client vai solicitar o token para o Authorization
+Server, o Authorization Server emite o token e o client realiza as requisições para o Resource Server.
+- Authorization Code (Recomendado - Um dos mais seguros): como o próprio nome diz é um grant type que tem um código de
+autorização, então o usuário acessa o sistema/client, o client redireciona para o usuário se autenticar no Authorization
+Server, chegando no Authorization Server o usuário se autentica (formulário de login), estando autenticado esse usuário
+o Authorization Server vai emitir um código de autorização, todas essas etapas são o passo 1 do Authorization Code. E
+agora passamos para o passo 2, nessa etapa o client já vai estar com o código de autorização em mãos e vai solicitar o
+token para o Authorization Server, o Authorization Server vai emitir o token e a partir daqui o client realiza as
+requisições para o Resource Server.
+- Client Credentials (Comunicação entre API's ou Sistemas): iremos utilizar toda vez que quisermos comunicar uma API com
+outra, então não existe usuário aqui, ou seja, a pessoa que vai se logar para acessar, aqui temos uma API acessando uma
+outra API, um sistema acessando outro sistema. Então, o client solicita o token para o Authorization Server passando o
+client id e o client secret, o Authorization Server emite um token com scopes (permissões), e o client realiza as
+requisições para o Resource Server.
+
+## JWT
+- A definição de JWT é JSON Web Token para você trabalhar com aplicações web em formato JSON, quando você decodifica o
+seu corpo a gente consegue informações em formato JSON isso facilita com que a gente adicione informações nele pra fazer
+algumas identificações.
+- Além do token JWT eu posso ter tokens opacos e qual a diferença entre eles? O token JWT carrega informações e você
+pode customizar as informações que vão nele, por exemplo posso botar quais são as authorities dele, qualquer coisa que
+seja necessário para a minha aplicação. Já o token opaco ele é só um hash que não diz nada, você não consegue
+criptografar, descriptografar, não tem nada dentro dele, é só um monte de letras e números, mas que é válido, ele só
+valida se existe aquele token no servidor.
+- Anatomia do token JWT: dividido em três partes -> a primeira parte é o header que possui alguns metadados como o tipo
+que ele é, qual foi o algoritmo utilizado para gerar a sua assinatura. A segunda parte é o payload que é o corpo do
+token JWT onde vão ser carregadas as informações customizadas, as informações que são colocadas aqui são chamadas de
+claims. A terceira e última parte é a parte que não conseguimos descriptografar a única forma de conseguirmos fazer isso
+é passando a chave que foi utilizada para assinar o token no servidor, é a parte importante porque ela que serve para
+validar o token, para garantir a autenticidade desse token.
