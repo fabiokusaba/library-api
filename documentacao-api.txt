@@ -1,0 +1,9 @@
+## Swagger e Open API
+- A ferramenta mais utilizada para documentação de APIs é o Swagger, então ele é uma ferramenta utilizada para
+documentar e até mesmo para desenvolver APIs.
+- O Swagger permite que a gente defina o contrato de uma API e ele vai gerar uma página HTML para a gente visualizar
+toda a documentação da API contendo os seus endpoints, modelos, inclusive conseguimos testar a API fazendo requisições
+autenticando-se.
+- O Swagger é a interface gráfica que vimos, porém a especificação que vamos estar trabalhando é a Open API, então ela
+é uma especificação que define um padrão para escrever APIs REST, o conjunto estruturado que vimos com detalhamento de
+endpoints, métodos, objetos, etc, tudo aquilo é a Open API.
