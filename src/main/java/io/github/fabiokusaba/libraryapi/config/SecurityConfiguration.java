@@ -11,6 +11,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.core.userdetails.User;
@@ -125,6 +126,27 @@ public class SecurityConfiguration {
                 // faz a verificação dele e gera o JwtAuthenticationToken)
                 .addFilterAfter(jwtCustomAuthenticationFilter, BearerTokenAuthenticationFilter.class)
                 .build();
+    }
+
+    // Se a gente não estivesse utilizando Spring Security na aplicação adicionando a dependência do Swagger Open API e
+    // executando ele já iria funcionar e fazer a documentação automática, porém como temos a configuração de segurança
+    // aqui a gente precisa desabilitar a segurança para o Swagger
+    // Nós temos os filtros de segurança, mas eu não quero que o Swagger passe por esses filtros porque ele é apenas uma
+    // interface gráfica de documentação da nossa API
+    // E aqui existe uma diferença que ele não é igual ao permitAll, o permitAll ainda passa no filtro de segurança, ou
+    // seja, ele ainda vai ver se você tem um token válido ou não, e aqui ele não vai nem executar esse processamento
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        // Aqui dentro vamos passar um array de URLs que ele deve ignorar no filtro do Security, ou seja, todas
+        // as URLs que eu colocar aqui ele não vai verificar se tem token ou não tem, se tem acesso ou não
+        return web -> web.ignoring().requestMatchers(
+                "/v2/api-docs/**",
+                    "/v3/api-docs/**",
+                    "/swagger-resources/**",
+                    "/swagger-ui.html",
+                    "/swagger-ui/**",
+                    "/webjars/**"
+                );
     }
 
     // A configuração é bem simples basta retornarmos a instância dele e no construtor a gente passa qual prefixo que
