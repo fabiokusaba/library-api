@@ -71,7 +71,12 @@ public class AuthorizationServerConfiguration {
     public TokenSettings tokenSettings() {
         return TokenSettings.builder()
                 .accessTokenFormat(OAuth2TokenFormat.SELF_CONTAINED)
+                // Aqui estamos dizendo que o access token dura 60 minutos e é o token utilizado nas requisições
                 .accessTokenTimeToLive(Duration.ofMinutes(60))
+                // Agora vou dizer a duração do refresh token, vamos supor que a sessão do usuário é de 60 minutos
+                // extendível até 90 minutos, então o refresh token sempre vai ter uma duração maior que o access token
+                // e é o token para renovar o access token
+                .refreshTokenTimeToLive(Duration.ofMinutes(90))
                 .build();
     }
 
