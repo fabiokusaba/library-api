@@ -3,6 +3,7 @@ package io.github.fabiokusaba.libraryapi.controller.dto;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
@@ -30,16 +31,20 @@ import jakarta.validation.constraints.Size;
 // os campos para serem salvos na base de dados
 // Mais um motivo para você utilizar o padrão DTO é esse, você vai utilizar ele pra fazer essas validações não deixando com que a camada
 // de persistência já chegue quebrada e também você não precisa deixar sujar, deixar muita sujeira nas suas entidades
+@Schema(name = "Autor")
 public record AutorDTO(
     UUID id,
     @NotBlank(message = "Campo obrigatório")
     @Size(min = 3, max = 100, message = "Campo fora do tamanho padrão")
+    @Schema(name = "nome")
     String nome, 
     @NotNull(message = "Campo obrigatório")
     @Past(message = "Não pode ser uma data futura")
+    @Schema(name = "dataNascimento")
     LocalDate dataNascimento, 
     @NotBlank(message = "Campo obrigatório")
     @Size(min = 2, max = 50, message = "Campo fora do tamanho padrão")
+    @Schema(name = "nacionalidade")
     String nacionalidade) {
 
     // Podemos aqui dentro do corpo do nosso DTO criar um metodo para fazer o mapeamento para Autor, então eu vou transformar esse
