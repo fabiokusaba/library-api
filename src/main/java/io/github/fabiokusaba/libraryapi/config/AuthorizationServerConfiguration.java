@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
@@ -147,5 +148,27 @@ public class AuthorizationServerConfiguration {
     @Bean
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
         return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
+    }
+
+    // Customização de URLs -> quais são os endpoints que você pode utilizar para se autenticar, obter um token, revogar
+    // o token, etc
+    @Bean
+    public AuthorizationServerSettings authorizationServerSettings() {
+        return AuthorizationServerSettings.builder()
+                // Obter token independente do grant type
+                .tokenEndpoint("/oauth2/token")
+                // Obter informações do token, por exemplo ver até quando aquele token vale, etc
+                .tokenIntrospectionEndpoint("/oauth2/introspect")
+                // Revogação do token para quando você quer revogar o token antes de acabar o seu tempo de duração
+                .tokenRevocationEndpoint("/oauth2/revoke")
+                // Authorization Code -> encaminha para o formulário de login
+                .authorizationEndpoint("/oauth2/authorize")
+                // Obter informações do usuário Open ID Connect
+                .oidcUserInfoEndpoint("/oauth2/userinfo")
+                // Obter a chave pública para verificar a assinatura do token
+                .jwkSetEndpoint("/oauth2/jwks")
+                // Logout
+                .oidcLogoutEndpoint("/oauth2/logout")
+                .build();
     }
 }
