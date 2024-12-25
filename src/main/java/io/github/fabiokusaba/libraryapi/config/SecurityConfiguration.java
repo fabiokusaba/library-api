@@ -74,7 +74,7 @@ public class SecurityConfiguration {
                     configurer.loginPage("/login");
                 })
                 // Configurando o httpBasic
-                .httpBasic(Customizer.withDefaults())
+                //.httpBasic(Customizer.withDefaults())
                 // Por último vou autorizar requisições http, ou seja, estabelecer as regras de acesso
                 .authorizeHttpRequests(authorize -> {
                     // Permitindo que tanto login quanto o cadastro de usuário sejam abertos
