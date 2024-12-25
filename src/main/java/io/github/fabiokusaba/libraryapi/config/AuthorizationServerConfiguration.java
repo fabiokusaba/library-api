@@ -5,21 +5,26 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import io.github.fabiokusaba.libraryapi.security.CustomAuthentication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
+import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 
 import java.security.KeyPair;
@@ -27,6 +32,8 @@ import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 @Configuration
@@ -170,5 +177,43 @@ public class AuthorizationServerConfiguration {
                 // Logout
                 .oidcLogoutEndpoint("/oauth2/logout")
                 .build();
+    }
+
+    // Customizando token JWT -> por ser um Bean ele vai ser registrado dentro do AuthorizationServer, ele vai ver que
+    // tem um tokenCustomizer registrado e aí quando ele for customizar o token ele vai chamá-lo passando esse contexto
+    // para executar a nossa lógica
+    @Bean
+    public OAuth2TokenCustomizer<JwtEncodingContext> tokenCustomizer() {
+        // Vamos construir um objeto que vai receber esse context e quem é que passa esse context? É o Authorization
+        // Server
+        return context -> {
+            // Esse principal é a authentication que vai vir e como a gente sabe a nossa aplicação só trabalha com
+            // authentication que é a CustomAuthentication
+            var principal = context.getPrincipal();
+
+            // Para garantir vamos verificar se esse principal é instância de CustomAuthentication
+            if (principal instanceof CustomAuthentication authentication) {
+                // Vou verificar qual o tipo de token que temos aqui
+                OAuth2TokenType tipoToken = context.getTokenType();
+
+                // Vou verificar se esse tipoToken é um Access Token, token que mandamos na requisição, e o Refresh
+                // Token é um grant type para renovarmos o nosso Access Token
+                if (OAuth2TokenType.ACCESS_TOKEN.equals(tipoToken)) {
+                    // Pegando as authorities
+                    Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+
+                    // Mapeando as authorities
+                    List<String> authoritiesList = authorities.stream()
+                            .map(GrantedAuthority::getAuthority)
+                            .toList();
+
+                    // Quero pegar esse objeto do contexto com o metodo getClaims e aqui ele tem um metodo claim onde
+                    // você coloca uma parâmetro e um valor
+                    context.getClaims()
+                            .claim("authorities", authoritiesList)
+                            .claim("email", authentication.getUsuario().getEmail());
+                }
+            }
+        };
     }
 }
