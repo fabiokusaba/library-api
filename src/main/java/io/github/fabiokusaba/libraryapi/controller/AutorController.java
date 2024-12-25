@@ -67,6 +67,9 @@ public class AutorController implements GenericController {
             @ApiResponse(responseCode = "409", description = "Autor já cadastrado")
     })
     public ResponseEntity<Void> salvar(@RequestBody @Valid AutorDTO dto, Authentication authentication) {
+
+        log.info("Cadastrando novo autor: {}", dto.nome());
+
         // A ideia é que quando eu vou cadastrar um autor, por exemplo, a minha solicitação quando chegar no backend, na
         // API eu quero pegar quem é esse usuário que fez esse cadastro e salvar lá na base de dados como uma forma de
         // auditoria
@@ -169,6 +172,9 @@ public class AutorController implements GenericController {
             @ApiResponse(responseCode = "400", description = "Autor possui livro cadastrado")
     })
     public ResponseEntity<Void> deletar(@PathVariable("id") String id) {
+
+        log.info("Deletando autor de ID: {}", id);
+
         // Vamos transformar o id que recebemos em UUID
         var autorId = UUID.fromString(id);
 

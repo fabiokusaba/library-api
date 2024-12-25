@@ -5,6 +5,7 @@ import io.github.fabiokusaba.libraryapi.controller.dto.ErroResposta;
 import io.github.fabiokusaba.libraryapi.exceptions.CampoInvalidoException;
 import io.github.fabiokusaba.libraryapi.exceptions.OperacaoNaoPermitidaException;
 import io.github.fabiokusaba.libraryapi.exceptions.RegistroDuplicadoException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 // Vamos adicionar uma annotation RestControllerAdvice porque ele vai capturar exceptions, o objetivo dele é esse, e ele
 // vai dar uma resposta Rest
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     // Então, aqui a gente coloca como se a gente tivesse recebendo uma exception, como se fosse um try-catch, só que nesse
@@ -35,6 +37,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(code = HttpStatus.UNPROCESSABLE_ENTITY)
     public ErroResposta handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+
+        log.error("Erro de validação: {}", e.getMessage());
+
         // Para descobrirmos quais campos que deram erro através dessa annotation fazemos da seguinte forma: ela tem um
         // metodo getFieldErrors que vai retornar os campos que deram erro, então eu tenho uma lista de FieldError e esse
         // objeto tem a capacidade de me dizer quais campos deram erro
@@ -90,6 +95,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(code = HttpStatus.INTERNAL_SERVER_ERROR)
     public ErroResposta handleErrosNaoTratados(RuntimeException e) {
+
+        log.error("Erro inesperado", e);
+
         return new ErroResposta(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Ocorreu um erro inesperado. Entre em contato com a administração.",
