@@ -1,0 +1,18 @@
+## Logging, Observabilidade e Métricas
+- level root: toda a aplicação.
+- Temos cinco níveis de log: trace, debug, info, warn e error.
+- Quando habilitamos o nível trace significa que habilitamos todos os outros (debug, info, warn, error). Nível mais
+detalhado de logs, utilizado para fazermos um rastreamento bem minucioso, observar tudo o que está acontecendo, não
+recomendado habilitar ele no root.
+- O debug vai pegar o info, warn e error. Informações de debug, depuração, então ele vai detalhar o fluxo de variáveis
+em execução.
+- O info vai pegar warn e error. Informações gerais sobre o funcionamento normal da aplicação.
+- O warn vai pegar o error. Indica eventos potencialmente problemáticos.
+- E o error é somente ele. Quando ocorre algum error, exception, erros que impedem uma operação específica, mas que não
+causam a interrupção total do sistema.
+
+## Spring Actuator
+- Quando se trata de observabilidade a equipe do Spring já criou uma ferramenta para a gente adicionar dentro do nosso
+projeto onde podemos monitorar endpoints da nossa aplicação.
+- As principais características são: basicamente ele fornece algumas funcionalidades para monitorar e gerenciar a nossa
+aplicação quando ela está me produção.
