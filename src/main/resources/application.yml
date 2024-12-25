@@ -25,6 +25,8 @@ spring:
             client-secret: ${GOOGLE_CLIENT_SECRET}
 
 logging:
+  pattern:
+    console: '%clr(%d{dd-MM-yyyy HH:mm:ss}){faint} %clr(%5p) %clr([%t]){faint} %clr(%-40.40logger){cyan} %clr(:){yellow} %m%n'
   file:
     name: app.log
   level:
