@@ -1,0 +1,84 @@
+## Ambientes, Build, Cloud e Deploy no Docker e AWS
+- Configurando múltiplos ambientes na aplicação: no arquivo 'application.yml' nós temos as configurações de aplicação.
+O Spring Boot permite que a gente crie os nossos próprios perfis, ou seja, nossos próprios ambientes e podemos nomeá-los
+da forma que quisermos, para isso podemos duplicar o nosso arquivo 'application.yml' passando o nome que eu quero, por
+exemplo 'application-production.yml' e aqui colocamos as configurações de produção. E como a gente consegue ativar um
+ambiente ou outro? Uma das formas da gente ativar um perfil é dentro do nosso arquivo 'application.yml' colocarmos em
+spring: profiles: active: '<nome_do_ambiente>' que queremos ativar, por exemplo 'production'. E conseguimos saber o
+perfil que está ativo pelo log da nossa aplicação. Um detalhe importante para mencionar é que o arquivo 'application.yml'
+é o principal então nele podemos colocar todas as configurações principais da aplicação e nos específicos podemos
+sobrescrever somente as configurações que forem necessárias, por exemplo no ambiente de produção podemos trocar o banco
+de dados usado então nesse caso vamos alterar apenas a conexão, no ambiente de homolagação podemos alterar o formato dos
+logs, e assim por diante. Uma outra forma, mais eficiente e atual, para se trabalhar com aplicações Spring Boot é
+utilizando variáveis de ambiente que vão ser responsáveis por modificar os valores dos campos a serem preenchidos no
+arquivo.
+- Profiles: é uma forma de configurarmos o nosso 'application.yml' para que ele tenha todos os ambientes que precisamos
+sem a necessidade de criarmos arquivos adicionais como por exemplo 'application-production.yml'. Para issovamos separa
+os ambientes utilizando '---', opcionalmente podemos usar comentários para deixar mais explícito o ambiente que estamos
+configurando, em seguida vamos utilizar 'spring: config: activate: on-profile: <nome_do_ambiente>' passando o nome do
+ambiente e as configurações que eu quero sobrescrever. Um detalhe que podemos usar a mesma configuração para mais de um
+ambiente, para isso basta a gente separá-los por vírgula por exemplo 'on-profile: producao, homologacao, dev'.
+- Variáveis de ambiente: ao invés de ficarmos criando vários perfis a gente pode parametrizar as nossas configurações
+através de variáveis de ambiente e onde fizermos o deploy a nossa aplicação vai ter as variáveis daquele ambiente em
+específico. Imagine também que você não queira expor dados da sua aplicação como por exemplo a url de conexão com o seu
+banco de dados e que somente o servidor conheça de tal informação, então podemos fazer com que o servidor injete essas
+variáveis de ambiente na nossa aplicação. A forma da gente injetar variáveis de ambiente em uma aplicação Spring Boot é
+a seguinte '${NOME_DA_VARIAVEL}', existe uma forma da gente injetar uma variável de ambiente e caso o valor dela não
+exista o Spring irá pegar um valor padrão e para isso fazemos da seguinte forma '${DATASOURCE_URL:jdbc:postgresql:...}'.
+- Criando o build de uma aplicação Spring Boot: para isso vamos utilizar o Maven, dentre os comandos que temos o 'clean'
+ele vai apagar a pasta 'target' limpando tudo que já foi compilado anteriormente, o 'install' vai executar os comandos
+'validate, compile, test, package, verify', ou seja, ele executa os passos anteriores porém o 'clean' vai ser sempre
+necessário você assinalar caso queira rodar esse comando, para empacotarmos a nossa aplicação vamos rodar o comando
+'package', então se a gente executar 'clean package' vamos estar gerando o pacote 'JAR' da nossa aplicação. Para a gente
+executar o arquivo '.jar' gerado basta utilizarmos o comando 'java -jar <caminho_do_arquivo.jar>'.
+- Construindo imagem Docker: vamos construir uma imagem docker da nossa aplicação que vai fazer essas duas etapas que
+vimos, ou seja, ela vai buildar a nossa aplicação criando o arquivo '.jar' como também ela vai ter outro comando para
+rodar a aplicação quando for subir o container. Para construímos a nossa própria imagem Docker vamos precisar criar um
+arquivo chamado 'Dockerfile', então na raiz do projeto vamos criar esse arquivo. Para construímos a nossa imagem vamos
+precisar de duas fases como vimos: primeiro build e depois run. Para fazermos o build precisamos rodar o comando Maven
+'mvn clean package', então vamos precisar da imagem do Maven, sempre que construímos uma imagem Docker vamos nos basear
+em outras imagens, e como nós achamos as imagens? Acessando o site 'hub.docker.com', registry da comunidade, quando a
+gente localiza uma imagem no Docker precisamos nos atentar quanto a compatibilidade com as tecnologias que estamos
+utilizando no projeto, por exemplo estamos utilizando o Java 21 então precisamos buscar uma imagem Maven compatível com
+essa versão, para isso vamos na aba 'Tags' e digitamos a versão do Java, no nosso caso 21, para termos as opções que são
+compatíveis. Para adicionarmos uma imagem para ser utilizada usamos o comando 'FROM <nome_da_imagem>', para criarmos uma
+pasta utilizamos o comando 'WORKDIR /<nome_da_pasta>' desta forma estamos construindo dentro da imagem uma pasta com
+esse nome, com o comando 'COPY ' vamos pegar o nosso código fonte e jogar para dentro dessa pasta que acabamos de criar
+e esse comando vai receber dois parâmetros: o primeiro é qual arquivo que eu quero copiar, no caso podemos colocar '.'
+que vai copiar toda a pasta atual e em seguida podemos usar novamente o '.' para referir que vamos colocar dentro da
+pasta que foi criada, a partir do momento que declaramos o nosso 'WORKDIR' todos os comandos abaixo vão ser executados
+dentro dele, com os arquivos copiados basta rodar o comando 'mvn clean package', comando que irá fazer o build da
+aplicação, e para isso usamos o comando 'RUN' do Docker, quando ele terminar de executar esses comandos teremos o nosso
+arquivo '.jar', agora o que precisamos fazer é pegar esse arquivo que foi gerado e rodar ele dentro do Java. Um adendo,
+esse arquivo 'Dockerfile' que estamos criando é chamado de multi stage build porque ele tem mais de um estágio, ou seja,
+temos o build e o run. Na etapa run vamos novamente usar o 'FROM' para pegar a imagem do Java 21, versão que estamos
+usando na aplicação, vamos criar o 'WORKDIR' onde iremos executar os comandos, agora com o comando 'COPY' precisamos
+pegar de dentro do nosso build o arquivo '.jar' que foi gerado, precisamos expor as portas com o comando 'EXPOSE',
+definir as variáveis de ambiente com o comando 'ENV', uma das variáveis de ambiente que é importante setar é a 'TZ' que
+corresponde a TimeZone isso é importante porque caso você esteja subindo a sua aplicação na AWS pode ser que você esteja
+fazendo o upload num servidor americano, europeu, então ele vai pegar a hora do servidor, mas se você colocar a 'TZ'
+como variável de ambiente ele vai pegar a hora da zona que você passou, por exemplo 'America/Sao_Paulo', por último
+precisamos colocar o comando 'ENTRYPOINT' esse comando que vai inicializar a aplicação. Finalizada a etapa do nosso
+arquivo 'Dockerfile' precisamos agora construir a imagem e para isso precisamos rodar o seguinte comando 'docker build'
+lembrando que precisamos estar na raiz do projeto, ou seja, onde está localizado o nosso arquivo 'Dockerfile', podemos
+passar alguns parâmetros como: '--tag <nome_da_imagem>', ao final passamos o '.' para dizer que o nosso arquivo está na
+raiz, então o comando completo ficaria assim 'docker build --tag cursosdevbase/libraryapi .' A partir da nossa imagem
+criada podemos agora criar o nosso container para isso vamos utilizar o seguinte comando 'docker run', com '--name'
+podemos nomear o nosso container e isso é uma boa prática a se fazer, e a partir daqui precisamos passar as variáveis de
+ambiente com '-e', ou seja, precisamos agora setar aquelas variáveis que declaramos no nosso arquivo 'Dockerfile',
+passamos a '--network' para que os containers consigam conversar entre si, '-d' para executar em modo background, '-p'
+passando as portas, feito isso precisamos chamar a nossa imagem. Para sabermos se o nosso container subiu corretamente
+podemos utilizar o comando 'docker logs <nome_do_container'.
+- Enviando a imagem para o Dockerhub: primeiramente precisamos ter uma conta no Dockerhub, precisamos criar uma tag da
+nossa imagem com o seguinte comando 'docker tag <nome_da_imagem> <nome_da_tag>', precisamos fazer o login para enviar a
+imagem para fazer o login usamos o comando 'docker login', uma vez logado utilizamos o comando 'docker push <nome_tag>'
+para enviar a imagem para o registry, Dockerhub.
+
+- Introdução aos serviços de Cloud: atualmente os dois principais serviços de Cloud que temos é o GCP (Google) e AWS
+(Amazon), mas temos também a Azure (Microsoft), Oracle, várias outras empresas de tecnologia que oferecem soluções
+cloud. Existem vários serviços que podemos utilizar na cloud como por exemplo banco de dados, repositórios Git, registry
+Docker, computação na nuvem (Cloud Computing), então a cloud basicamente são serviços que estão na internet que você vai
+pagando a depender do seu uso. O RDS (Relational Database Service) na AWS é o serviço de banco de dados na nuvem para
+bancos relacionais onde podemos selecionar MariaDB, SQL Server, PostgreSQL, MySQL, Oracle. Com o serviço EC2 na AWS é
+possível criarmos uma máquina virtual para a nossa aplicação, conseguimos selecionar o sistema operacional da nossa 
+máquina onde temos opções Linux, macOS e Windows.
