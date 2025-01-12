@@ -1,0 +1,87 @@
+## Dominando Docker
+- O que posso fazer? Rodar serviços e acessar via browser, compilar códigos fonte inclusive em versões diferentes, subir
+um ambiente completo com todos os recursos da minha aplicação, acessar várias versões de serviços na mesma máquina sem
+instalar.
+- Dockerhub: registro global usado para hospedar e baixar diversas imagens.
+- Baixando imagens: através do Dockerhub conseguimos pesquisar a imagem que procuramos, por exemplo MySQL, acessando a 
+página do MySQL temos todas as informações necessárias para estar baixando a imagem, inclusive o comando 'docker pull'.
+Na aba Tags temos as versões disponíveis do MySQL, por exemplo 'latest', 'oracle', caso você não especifique a tag ele
+vai baixar a latest e um detalhe importante é que a tag fica depois dos ':', ou seja, '<nome_imagem>:<nome_tag>'. Para
+visualizarmos as imagens que temos baixadas na nossa máquina local usamos o comando 'docker images'.
+- Rodando e utilizando uma imagem: para rodar um container a partir de uma imagem devemos seguir o que está descrito no
+Dockerhub, por exemplo para rodarmos um servidor de MySQL utilizamos o comando 'docker run --name <nome> -e MYSQL_ROOT_PASSWORD
+<password> -d <imagem:tag>'. O comando 'docker run' é o comando que inicializa um container a partir de uma imagem e temos
+alguns parâmetros que podemos passar junto a esse comando tais como: '--name' para darmos um nome ao container, '-e' para
+passarmos as variáveis de ambiente, '-d' modo daemon, '-p' para indicar em que porta eu quero escutar aqui na minha máquina
+host e no container, o container é como se fosse uma outra máquina assim colocamos '3306' para identificar a porta da minha
+máquina host e '3306' para identificar qual é a porta do container que eu quero espelhar na '3306' que decidimos anteriormente
+nosso comando ficaria '-p 3306:3306' e por fim a imagem. Para saber se deu certo podemos utilizar o comando 'docker ps' que vai
+nos mostrar os processos que estão rodando.
+- Parando e reiniciando um container: o comando que utilizamos para parar um container é 'docker stop' e ele recebe um parâmetro
+que é o container id ou container name. Para subirmos novamente o container usamos o comando 'docker start' passando como parâmetro
+o container id ou container name. Um detalhe a respeito dos comandos 'docker stop' e 'docker start' é que você consegue para e
+reiniciar um container digitando apenas alguns caracteres do container id.
+- Deletando um container: com o comando 'docker ps -a' conseguimos listar todos os container ativos e inativos do sistema e para
+deletarmos um container usamos o comando 'docker container rm' passando como parêmtro o container name. Primeira coisa não conseguimos
+excluir um container que está ativo precisamos pará-lo primeiro com o comando 'docker stop'.
+- Diferença entre imagens e containers: eu consigo através de uma imagem criar vários containers e os containers são serviços que podemos
+utilizar em uma aplicação. Ele recebe o nome de container porque é como se fosse um sistema isolado que vai conter o mínimo necessário
+para rodar a imagem, ou seja, dentro de um container temos um kernel Linux que vai ter as configurações mínimas necessárias para rodar
+uma imagem MySQL, por exemplo. Diferentemente de uma máquina virtual que possui um sistema completo e você roda os seus programas ali
+dentro.
+
+## Processo de build e deploy
+- Precisamos entender o processo de publicação de uma aplicação, por exemplo como fazemos a publicação de uma aplicação web HTML? Temos
+os nossos arquivos estáticos HTML, CSS e JS, preciso de um servidor que consiga interpretar aquele código e disponibilizar no browser
+para que os clientes possam acessar através de um protocolo HTTP, por se tratar de uma aplicação estática basta a gente servir em um
+servidor HTML, mas quando a gente tem uma linguagem de programação a gente precisa compilar aquele código, empacotar ele, pra depois
+entender como ele pode subir dentro de uma máquina para ficar servindo as requisições vindas dos clientes. No caso de uma aplicação
+Spring Boot nós temos um comando que a gente utiliza para fazer o empacotamento e deixá-la pronta para produção 'mvn clean package' ainda
+podemos passar a flag '-DskipTests' para que nesse processo ele ignore os testes. Finalizado o processo de empacotamento podemos rodar o
+arquivo '.jar' gerado na pasta target através do comando 'java -jar <nome_do_arquivo>'.
+
+## Dockerfile
+- Para construímos as nossas próprias imagens Docker precisamos de instruções que vão ser colocadas dentro do arquivo 'Dockerfile', então
+o processo de criação da imagem funciona da seguinte forma: vamos ter o nosso arquivo 'Dockerfile' contendo as instruções que vamos colocar
+nele. Na raiz do projeto criamos o nosso arquivo 'Dockerfile', todas as instruções do Docker são em caixa alta (letra maiúscula) e a primeira
+instrução e obrigatória que a gente tem que colocar no 'Dockerfile' é 'FROM' que vai dizer qual é a imagem base que vou utilizar para estar
+criando a minha imagem customizada, feito isso o próximo comando que vamos colocar é o 'WORKDIR' que vai criar pra gente uma pasta dentro do
+container com o nome que passarmos, por exemplo '/app', e todos os comandos seguintes vão rodar dentro dessa pasta. O próximo comando vai
+servir para pegarmos o nosso arquivo empacotado e jogar para dentro da pasta '/app' para isso vamos utilizar o 'COPY' passando dois parâmetros:
+o primeiro parâmetro é o local onde está o arquivo que quero copiar e o segundo parâmetro o local de destino. Com o arquivo copiado para dentro
+da nossa pasta '/app' basta executarmos o comando para iniciar a aplicação e fazemos isso em 'ENTRYPOINT'.
+- Uma vez que construímos o nosso arquivo 'Dockerfile' podemos passar para a próxima etapa que seria o build da imagem para isso abrimos o nosso
+terminal na pasta raiz do projeto onde se encontra o nosso arquivo 'Dockerfile' e rodamos o seguinte comando 'docker build', podemos passar
+alguns parâmetros: '--tag' para passarmos o nome da imagem, o último parâmetro que passamos no 'docker build' é onde está localizado o arquivo
+'Dockerfile' no nosso caso como estamos na raiz do projeto podemos passar o '.' que indica que ele está na pasta atual.
+
+## Docker Imagens
+- docker build: criar uma imagem
+- docker images: listar imagens
+- docker image rm <tag>: remover uma imagem
+- docker pull <tag>: baixar uma imagem
+- docker push <tag>: enviar uma imagem para o registry (Dockerhub)
+
+## Multi-stage build
+- Vamos ter mais de um estágio para construir a nossa imagem Docker, então o primeiro estágio que precisamos fazer é buildar a aplicação e
+para isso precisamos da imagem do maven para rodar o comando 'mvn clean package', nesse primeiro estágio podemos dar um nome a ele e para
+isso usamos o alias 'as build', com o comando 'WORKDIR' vamos criar a sua pasta e todos os comandos seguintes a serem executados vão ser
+dentro dessa pasta, com o comando 'COPY' vamos copiar todos os arquivos do nosso projeto já que vamos fazer o seu build e para isso '. .'
+para que esse comando exclua arquivos que eu quero que não sejam copiados posso estar criando um arquivo na raiz do projeto chamado
+'.dockerignore' passando o nome dos arquivos que não vão ser copiados, e por fim vamos utilizar o comando 'RUN' para executarmos uma linha
+de comando dentro do nosso container. O segundo estágio é rodar a aplicação, então aqui vamos precisar da imagem do Java na versão do projeto
+criamos a nossa pasta com o comando 'WORKDIR', vamos precisar copiar o arquivo gerado em build para dentro dessa pasta com o comando 'COPY' e
+por fim iremos rodar a aplicação com o comando 'ENTRYPOINT' que permite executar uma linha de comando.
+
+## Conversação entre containers
+- Por exemplo, temos dois containers Docker rodando: um container MySQL e outro container a aplicação, na minha máquina local esses containers
+estão rodando em portas distintas o MySQL estaria rodando em 'localhost:3307' mas dentro do container ele estaria rodando na porta '3306' e a
+aplicação na minha máquina vai estar rodando na porta 'localhost:8081' e no container na porta '8080', o container não enxerga a minha máquina
+local ele enxerga apenas o que está dentro do container, por isso precisamos nos referir ao container do MySQL através de outro nome ou então
+conseguir visualizar esse host. Para a gente conseguir visualizar outros containers através de um container a gente vai precisar de um recurso
+do Docker chamado 'Network'.
+- Uma Network é uma forma de você criar uma rede para os seus containers e para criarmos isso no Docker usamos o seguinte comando:
+'docker network create' passando como parâmetro o nome que você quer dar para essa Network. Feito isso podemos listar as Networks através do
+comando 'docker network ls'. Para subirmos um container na nossa Network que acabamos de criar usamos o comando que já vimos para subir um
+container 'docker run --name <nome_container>  -e <variavel_ambiente> -p <porta_maquina:porta_container> -d <nome_imagem>', porém antes da
+imagem precisamos passar um novo parâmetro para referenciar a nossa Network '--network <nome_network>'.
