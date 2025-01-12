@@ -1,0 +1,12 @@
+## Git
+- Criar o repositório do projeto local: para isso vamos abrir o terminal na pasta raiz do nosso projeto e digitar o comando 'git init'.
+Com o repositório criado vou adicionar os arquivos para o commit através do comando 'git add .' e um detalhe que esse '.' significa que
+estou adicionando todos os arquivos caso eu queira adicionar um arquivo em específico eu preciso passar o seu nome. Para verificarmos o
+status atual do nosso repositório podemos usar o comando 'git status'. Criado o repositório, adicionado os arquivos, passamos para a
+etapa de commit para isso usamos o comando 'git commit -m' onde através da flag '-m' conseguimos passar uma mensagem descritiva para esse
+nosso commit.
+- Criar o repositório remoto Github: acessando a nossa conta no Github criamos um novo repositório para o nosso projeto passando as suas
+configurações, novamente com o terminal aberto na pasta raiz do nosso projeto digitamos o comando 'git remote add origin' para adicionar
+o nosso projeto ao repositório remoto no Github, feito isso executando o comando 'git remote -v' conseguimos visualizar que o nosso
+repositório vai estar apontando para o repositório que criamos no Github, agora conseguimos fazer a sincronização através do comando
+'git push origin'.
